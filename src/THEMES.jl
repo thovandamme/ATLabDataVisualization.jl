@@ -6,6 +6,7 @@ function theme_defaults()::Theme
                 :gold, :darkcyan, :darkred, :darkolivegreen
             ],
             linestyle = [:dot, :solid],
+            linewidth = [3, 5]
         ),
         Axis = (
             leftspinevisible = false,
@@ -55,7 +56,9 @@ function theme_std()::Theme
     return merge(theme_defaults(), Theme(
         size = (1600, 900),
         fontsize = 20,
-        palette = (linewidth = [5])
+        # palette = (
+        #     linewidth = 4,
+        # )
     ))
 end
 
@@ -64,15 +67,19 @@ function theme_talk()::Theme
     return merge(theme_defaults(), Theme(
         size = (1600, 900),
         fontsize = 32,
-        palette = (linewidth = [5])
+        # palette = (
+        #     linewidth = 5,
+        # )
     ))
 end
 
 
 function theme_article()::Theme
     return merge(theme_defaults(), Theme(
-        size = (100, 600),
+        size = (1000, 600),
         fontsize = 15,
-        palette = (linewidth = [4])
+        # palette = (
+        #     linewidth = 4,
+        # )
     ))
 end
