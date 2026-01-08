@@ -1,4 +1,6 @@
-function visualize(data::AveragesData, T::Float64=2π)
+let
+
+global function visualize(data::AveragesData; T::Float64=2π)
     σ = collect(range(start=0, stop=10, length=101)).*T
     gaussvar = imfilter(data.field, Kernel.gaussian((0, σ[end])))
 
@@ -52,39 +54,32 @@ function visualize(data::AveragesData, T::Float64=2π)
         end
     end
     display(fig)
+    return fig, ax1, ax2
 end
 
 
-function integrated_timeprofile(
-        datas::Vector{AveragesData{T,I}}; 
-        zmin::AbstractFloat, zmax::AbstractFloat
+# Most basic method
+global function timeprofile(
+        datas::Vector{AveragesData{T,I}};
+        zmin::AbstractFloat, zmax::AbstractFloat,
+        slider::Bool=true,
+        filterscale::AbstractFloat=2π
     ) where {T<:AbstractFloat, I<:Signed}
     fig = Figure()
-    ax = Axis(fig[2,1], xlabel="t", ylabel=datas[1].name)
-    σ = collect(range(start=0, stop=10, length=101)).*2π
+    σ = collect(range(start=0, stop=10, length=101)).*filterscale
+    if slider
+        ax = Axis(fig[2,1], xlabel="t", ylabel=datas[1].name)
         sg = SliderGrid(
             fig[1, 1],
             (label="Smoothing", range=1:length(σ), startvalue=1, linewidth=15),
         )
-    σ_slider = sg.sliders[1]
+        σ_slider = sg.sliders[1]
+    else
+        ax = Axis(fig[1,1], xlabel="t", ylabel=datas[1].name)
+    end
     ln_sol = Vector{Lines}(undef, length(datas))
     ln_ssol = Vector{Lines}(undef, length(datas))
-
-    @inline function integrate(
-            data::AveragesData{T,I}, 
-            zmin::AbstractFloat, 
-            zmax::AbstractFloat
-        )::Vector{T} where {T<:AbstractFloat, I<:Signed}
-        sol = zeros(eltype(data.time), size(data.time))
-        imin = findmin(abs.(data.grid.z .- zmin))[2]
-        imax = findmin(abs.(data.grid.z .- zmax))[2]
-        for it ∈ eachindex(sol)
-            prob = SampledIntegralProblem(data.field[imin:imax,it], data.grid.z[imin:imax])
-            sol[it] = solve(prob, TrapezoidalRule()).u
-        end
-        return sol
-    end
-
+    
     # Initialize the plot
     for (i, data) ∈ enumerate(datas)
         ln_sol[i] = lines!(
@@ -96,7 +91,6 @@ function integrated_timeprofile(
         )
         # Curve smoothing with Gaussian filter
         sol = integrate(data, zmin, zmax)
-        # imfilter!(ssol, view(sol, :), Kernel.gaussian((σ[1],)))
         ssol = imfilter(view(sol, :), Kernel.gaussian((σ[1],)))
         ln_ssol[i] = lines!(
             ax, 
@@ -107,48 +101,43 @@ function integrated_timeprofile(
     end
   
     # Slider
-    lift(σ_slider.value) do j
-        for (i, data) ∈ enumerate(datas)
-            s = σ[j] * length(data.time) / data.time[end]
-            # imfilter!(ssol, view(integrate(data, zmin, zmax), :), Kernel.gaussian( (s,) ))
-            ssol = imfilter(view(integrate(data, zmin, zmax), :), Kernel.gaussian( (s,) ))
-            ln_ssol[i][2] = view(ssol, :)
+    if slider
+        lift(σ_slider.value) do j
+            for (i, data) ∈ enumerate(datas)
+                s = σ[j] * length(data.time) / data.time[end]
+                ssol = imfilter(view(integrate(data, zmin, zmax), :), Kernel.gaussian( (s,) ))
+                ln_ssol[i][2] = view(ssol, :)
+            end
         end
     end
+
     display(fig)
+    return fig, ax
 end
 
 
-function integrated_timeprofile(
+# Method which adds an axislegend according to _labels_.
+global function timeprofile(
         datas::Vector{AveragesData{T,I}},
         labels::Vector{String}; 
-        zmin::AbstractFloat, zmax::AbstractFloat
+        zmin::AbstractFloat, zmax::AbstractFloat,
+        slider::Bool=true,
+        filterscale::AbstractFloat=2π
     ) where {T<:AbstractFloat, I<:Signed}
     fig = Figure()
-    ax = Axis(fig[2,1], xlabel="t", ylabel=datas[1].name)
-    σ = collect(range(start=0, stop=10, length=101)).*2π
+    σ = collect(range(start=0, stop=10, length=101)).*filterscale
+    if slider
+        ax = Axis(fig[2,1], xlabel="t", ylabel=datas[1].name)
         sg = SliderGrid(
             fig[1, 1],
             (label="Smoothing", range=1:length(σ), startvalue=1, linewidth=15),
         )
-    σ_slider = sg.sliders[1]
+        σ_slider = sg.sliders[1]
+    else
+        ax = Axis(fig[1,1], xlabel="t", ylabel=datas[1].name)
+    end
     ln_sol = Vector{Lines}(undef, length(datas))
     ln_ssol = Vector{Lines}(undef, length(datas))
-
-    @inline function integrate(
-            data::AveragesData{T,I}, 
-            zmin::AbstractFloat, 
-            zmax::AbstractFloat
-        )::Vector{T} where {T<:AbstractFloat, I<:Signed}
-        sol = zeros(eltype(data.time), size(data.time))
-        imin = findmin(abs.(data.grid.z .- zmin))[2]
-        imax = findmin(abs.(data.grid.z .- zmax))[2]
-        for it ∈ eachindex(sol)
-            prob = SampledIntegralProblem(data.field[imin:imax,it], data.grid.z[imin:imax])
-            sol[it] = solve(prob, TrapezoidalRule()).u
-        end
-        return sol
-    end
 
     # Initialize the plot
     for (i, data) ∈ enumerate(datas)
@@ -161,7 +150,6 @@ function integrated_timeprofile(
         )
         # Curve smoothing with Gaussian filter
         sol = integrate(data, zmin, zmax)
-        # imfilter!(ssol, view(sol, :), Kernel.gaussian((σ[1],)))
         ssol = imfilter(view(sol, :), Kernel.gaussian((σ[1],)))
         ln_ssol[i] = lines!(
             ax, 
@@ -173,15 +161,127 @@ function integrated_timeprofile(
     end
   
     # Slider
-    lift(σ_slider.value) do j
-        for (i, data) ∈ enumerate(datas)
-            s = σ[j] * length(data.time) / data.time[end]
-            # imfilter!(ssol, view(integrate(data, zmin, zmax), :), Kernel.gaussian( (s,) ))
-            ssol = imfilter(view(integrate(data, zmin, zmax), :), Kernel.gaussian( (s,) ))
-            ln_ssol[i][2] = view(ssol, :)
+    if slider
+        lift(σ_slider.value) do j
+            for (i, data) ∈ enumerate(datas)
+                s = σ[j] * length(data.time) / data.time[end]
+                ssol = imfilter(view(integrate(data, zmin, zmax), :), Kernel.gaussian( (s,) ))
+                ln_ssol[i][2] = view(ssol, :)
+            end
         end
     end
 
     axislegend(ax, position=:rt)
     display(fig)
+    return fig, ax
 end
+
+
+# Method which works for different time axis lengths and different time step margins
+global function timeprofile(
+        dats::Vector{AveragesData{T,I}},
+        labels::Vector{String},
+        t::Vector{<:AbstractFloat}; 
+        zmin::AbstractFloat, zmax::AbstractFloat,
+        slider::Bool=true,
+        filterscale::AbstractFloat=2π
+    ) where {T<:AbstractFloat, I<:Signed}
+    # Do the remapping in the new time axis (better here than inside the loop)
+    datas = Vector{AveragesData{T,I}}(undef, length(dats))
+    for (i, dat) ∈ enumerate(dats)
+        datas[i] = remap(dat, t)
+    end
+
+    # Initialize the figure
+    fig = Figure()
+    σ = collect(range(start=0, stop=10, length=101)).*filterscale
+    if slider
+        ax = Axis(fig[2,1], xlabel="t", ylabel=datas[1].name)
+        sg = SliderGrid(
+            fig[1, 1],
+            (label="Smoothing", range=1:length(σ), startvalue=1, linewidth=15),
+        )
+        σ_slider = sg.sliders[1]
+    else
+        ax = Axis(fig[1,1], xlabel="t", ylabel=datas[1].name)
+    end
+    ln_sol = Vector{Lines}(undef, length(datas))
+    ln_ssol = Vector{Lines}(undef, length(datas))
+
+    # Initialize the plot
+    for (i, data) ∈ enumerate(datas)
+        # data = remap(dat, t)
+        ln_sol[i] = lines!(
+            ax, 
+            view(data.time, :), 
+            view(integrate(data, zmin, zmax), :),
+            linestyle=:dot,
+            linewidth=3,
+        )
+        # Curve smoothing with Gaussian filter
+        sol = integrate(data, zmin, zmax)
+        ssol = imfilter(view(sol, :), Kernel.gaussian((σ[1],)))
+        ln_ssol[i] = lines!(
+            ax, 
+            view(data.time, :), view(ssol, :), 
+            linestyle=:solid,
+            linewidth=4,
+            label = labels[i]
+        )
+    end
+  
+    # Slider
+    if slider
+        lift(σ_slider.value) do j
+            for (i, data) ∈ enumerate(datas)
+                # data = remap(dat, t)
+                s = σ[j] * length(data.time) / data.time[end]
+                ssol = imfilter(view(integrate(data, zmin, zmax), :), Kernel.gaussian( (s,) ))
+                ln_ssol[i][2] = view(ssol, :)
+            end
+        end
+    end
+
+    axislegend(ax, position=:rt)
+    display(fig)
+    return fig, ax
+end
+
+
+# Put into ATLabData?
+@inline function integrate(
+        data::AveragesData{T,I}, 
+        zmin::AbstractFloat, 
+        zmax::AbstractFloat
+    )::Vector{T} where {T<:AbstractFloat, I<:Signed}
+    sol = zeros(eltype(data.time), size(data.time))
+    imin = findmin(abs.(data.grid.z .- zmin))[2]
+    imax = findmin(abs.(data.grid.z .- zmax))[2]
+    for it ∈ eachindex(sol)
+        prob = SampledIntegralProblem(data.field[imin:imax,it], data.grid.z[imin:imax])
+        sol[it] = solve(prob, TrapezoidalRule()).u
+    end
+    return sol
+end
+
+
+# Put into ATLabData? Make one API with transform_grid
+@inline function remap(data::AveragesData, t::Vector{<:AbstractFloat})::AveragesData
+    i = findmin(abs.(t .- data.time[end]))[2]
+    res = AveragesData(
+        data.name, 
+        convert(Vector{eltype(data)[1]}, t[1:i-1]), 
+        data.grid, 
+        zeros(eltype(data)[1], (data.grid.nz, length(t[1:i-1])))
+    )
+    for k ∈ eachindex(res.grid.z)
+        itp = interpolate((data.time,), data.field[k,:], Gridded(Linear()))
+        for it ∈ eachindex(res.time)
+            res.field[k,it] = itp(res.time[it])
+        end
+    end
+    return res
+end
+
+
+end # End of let scope

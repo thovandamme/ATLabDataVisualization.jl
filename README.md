@@ -1,3 +1,3 @@
 # ATLabDataVisualization
 
-Package for visualizing _ATLabData_ with GLMakie.
+Package for visualizing quickly and interactively _ATLabData_ with GLMakie.

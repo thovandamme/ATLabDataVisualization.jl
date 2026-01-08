@@ -7,8 +7,7 @@ using ForwardDiff
 using Interpolations
 using Integrals
 
-export visualize, animate, heatmap
-export integrated_timeprofile
+export visualize, animate, heatmap, timeprofile
 export theme_article, theme_talk
 
 include("THEMES.jl")

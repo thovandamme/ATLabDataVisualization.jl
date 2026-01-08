@@ -1,48 +1,50 @@
 function visualize(data::ScalarData; slice::Int=1)
     fig, ax, hm = heatmap(data, slice=slice)
     display(fig)
+    return fig, ax, hm
 end
 
 
 function heatmap(
         data::ScalarData;
         slice::Int = 1, 
-        sizex::Int = 1000,
         colormap=:RdGy,
-        colorrange_max = maximum(data.field),
-        colorrange_min = minimum(data.field),
-        colorrange=(minimum(data.field),maximum(data.field)),
+        colorrange = (
+            -maximum(abs.(data.field)),
+            maximum(abs.(data.field))
+        ),
         colorscale = identity,
         colorbarticks = [
-            round(colorrange_min, digits=2), 
-            round((colorrange_max+colorrange_min)/2, digits=2), 
-            round(colorrange_max, digits=2)
+            round(colorrange[1], digits=2), 
+            round((colorrange[2]+colorrange[1])/2, digits=2), 
+            round(colorrange[2], digits=2)
         ],
         label=" ",
         xlabel = "x",
         ylabel = "z",
-        xtickstep = 10, #round(data.grid.scalex/8),
-        ytickstep = 10, #round(data.grid.scaley/4),
+        xtickstep = 10,
+        ytickstep = 10,
         title::String = data.name*"  ;  t = "*string(data.time)
     )::Tuple{Figure, Axis, Heatmap}
     println("Visualizing ...")
     printstyled("   $(data.name) \n", color=:cyan)
-    sizez = round(Int32, data.grid.scalez/data.grid.scalex*sizex)    
+    # sizez = round(Int32, data.grid.scalez/data.grid.scalex*sizex)    
     printstyled("   Backend: GLMakie \n", color=:light_black)
     
-    fig = Figure(size=(sizex, sizez))
+    fig = Figure()
     ax = Axis(
         fig[1,1], 
         xlabel=xlabel, ylabel=ylabel,
         xticks=data.grid.x[1]:xtickstep:data.grid.x[end],
         yticks=round(data.grid.z[1]):ytickstep:round(data.grid.z[end]),
-        title=title
-    )
-    resize_to_layout!(fig)
+        title=title,
+        aspect = DataAspect()
+    )    
     hm = heatmap!(
         ax,
         view(data.grid.x, :), 
         view(data.grid.z, :),
+        # Resampler(view(data.field, :, slice, :)),
         view(data.field, :, slice, :),
         colormap=colormap,
         colorrange=colorrange,

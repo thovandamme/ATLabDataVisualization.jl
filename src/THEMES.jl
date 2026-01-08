@@ -23,7 +23,6 @@ function theme_defaults()::Theme
         ),
         Legend = (
             framevisible = false,
-            # padding = (0, 0, 0, 0),
         ),
         Axis3 = (
             xspinesvisible = false,
@@ -56,9 +55,6 @@ function theme_std()::Theme
     return merge(theme_defaults(), Theme(
         size = (1600, 900),
         fontsize = 20,
-        # palette = (
-        #     linewidth = 4,
-        # )
     ))
 end
 
@@ -67,9 +63,6 @@ function theme_talk()::Theme
     return merge(theme_defaults(), Theme(
         size = (1600, 900),
         fontsize = 32,
-        # palette = (
-        #     linewidth = 5,
-        # )
     ))
 end
 
@@ -77,9 +70,7 @@ end
 function theme_article()::Theme
     return merge(theme_defaults(), Theme(
         size = (1000, 600),
-        fontsize = 15,
-        # palette = (
-        #     linewidth = 4,
-        # )
+        fontsize = 25,
+        figure_padding = 30
     ))
 end
