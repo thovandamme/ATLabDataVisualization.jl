@@ -4,18 +4,14 @@ Displays spacing and stretching of _grid_ as scatter plots over the vertical
 axis.
 """
 function visualize(grid::Grid)
-    s = collect(1:grid.nz)
     fig = Figure()
     # Plot the spacing as multiple of Δx
     ax = Axis(fig[1,1], xlabel="z", ylabel="Δz/Δx")
-    itp = linear_interpolation(s, grid.z, extrapolation_bc = Line())
-    spacing = ForwardDiff.derivative.(Ref(itp), s)
-    scatter!(ax, grid.z, spacing ./ (grid.scalex/grid.nx))
+    Δz = diff(grid.z); Δx = grid.x[2] - grid.x[1]
+    scatter!(ax, grid.z[1:end-1], Δz./Δx)
     # PLot the stretching
     ax2 = Axis(fig[2,1], xlabel="z", ylabel="stretching in %")
-    itp = linear_interpolation(s, spacing, extrapolation_bc = Line())
-    stretching = ForwardDiff.derivative.(Ref(itp), s) ./ spacing .* 100
-    scatter!(ax2, grid.z, stretching)
+    scatter!(ax2, grid.z[1:end-2], GridMapping.stretching(grid))
     display(fig)
     return fig, ax, ax2
 end
@@ -31,15 +27,11 @@ function visualize(grids::Vector{Grid{T,I}}) where {T<:AbstractFloat, I<:Signed}
     ax = Axis(fig[1,1], xlabel="z", ylabel="Δz/Δx")
     ax2 = Axis(fig[2,1], xlabel="z", ylabel="stretching in %")
     for grid ∈ grids
-        s = collect(1:grid.nz)
         # Plot the spacing as multiple of Δx
-        itp = linear_interpolation(s, grid.z, extrapolation_bc = Line())
-        spacing = ForwardDiff.derivative.(Ref(itp), s)
-        scatter!(ax, grid.z, spacing ./ (grid.scalex/grid.nx))
+        Δz = diff(grid.z); Δx = grid.x[2] - grid.x[1]
+        scatter!(ax, grid.z[1:end-1], Δz./Δx)
         # PLot the stretching 
-        itp = linear_interpolation(s, spacing, extrapolation_bc = Line())
-        stretching = ForwardDiff.derivative.(Ref(itp), s) ./ spacing .* 100
-        scatter!(ax2, grid.z, stretching)
+        scatter!(ax2, grid.z[1:end-2], GridMapping.stretching(grid))
     end
     display(fig)
     return fig, ax, ax2
@@ -60,15 +52,11 @@ function visualize(
     ax = Axis(fig[1,1], xlabel="z", ylabel="Δz/Δx")
     ax2 = Axis(fig[2,1], xlabel="z", ylabel="stretching in %")
     for (i, grid) ∈ enumerate(grids)
-        s = collect(1:grid.nz)
         # Plot the spacing as multiple of Δx
-        itp = linear_interpolation(s, grid.z, extrapolation_bc = Line())
-        spacing = ForwardDiff.derivative.(Ref(itp), s)
-        scatter!(ax, grid.z, spacing ./ (grid.scalex/grid.nx))
+        Δz = diff(grid.z); Δx = grid.x[2] - grid.x[1]
+        scatter!(ax, grid.z[1:end-1], Δz./Δx)
         # PLot the stretching 
-        itp = linear_interpolation(s, spacing, extrapolation_bc = Line())
-        stretching = ForwardDiff.derivative.(Ref(itp), s) ./ spacing .* 100
-        scatter!(ax2, grid.z, stretching, label=labels[i])
+        scatter!(ax2, grid.z[1:end-2], GridMapping.stretching(grid), label=labels[i])
     end
     axislegend(ax2, position=:rb)
     display(fig)
