@@ -28,8 +28,7 @@ function heatmap(
     )::Tuple{Figure, Axis, Heatmap}
     println("Visualizing ...")
     printstyled("   $(data.name) \n", color=:cyan)
-    # sizez = round(Int32, data.grid.scalez/data.grid.scalex*sizex)    
-    printstyled("   Backend: GLMakie \n", color=:light_black)
+    printstyled("   Backend: CairoMakie \n", color=:light_black)
     
     fig = Figure()
     ax = Axis(

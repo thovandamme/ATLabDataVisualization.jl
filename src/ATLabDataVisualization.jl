@@ -1,14 +1,15 @@
 module ATLabDataVisualization
 
-using GLMakie
-using ATLabData
+using Reexport
+using CairoMakie
 using ImageFiltering
-using ForwardDiff
 using Interpolations
 using Integrals
 
-export visualize, animate, heatmap, timeprofile
-export theme_article, theme_talk
+@reexport using ATLabData
+
+export visualize, heatmap, timeprofile
+export theme_std, theme_article, theme_talk
 
 include("THEMES.jl")
 
@@ -18,10 +19,8 @@ include("Averages.jl")
 
 include("2D.jl")
 
-include("3D.jl")
-
 function __init__()
-    GLMakie.activate!()
+    CairoMakie.activate!()
     set_theme!(theme_std())
 end
 

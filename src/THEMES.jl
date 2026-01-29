@@ -3,10 +3,8 @@ function theme_defaults()::Theme
         palette = (
             color = [
                 :forestgreen, :dodgerblue, :seashell4, :firebrick1, :deepskyblue,
-                :gold, :darkcyan, :darkred, :darkolivegreen
+                :gold, :darkcyan, :darkolivegreen
             ],
-            linestyle = [:dot, :solid],
-            linewidth = [3, 5]
         ),
         Axis = (
             leftspinevisible = false,
@@ -38,12 +36,18 @@ function theme_defaults()::Theme
             ticklabelpad = 5,
         ),
         Lines = (
-           cycle = Cycle([:color], covary=true),
-           alpha = 0.75
+            cycle = [:color],
+            alpha = 0.75,
+            linestyle = :solid,
+            linewidth = 3,
         ),
-        # Contour = (
-        #     linewidth = 5
-        # ),
+        Scatter = (
+            cycle = [:color],
+            alpha = 0.75,
+        ),
+        Contour = (
+            linewidth = 2
+        ),
         Band = (
             alpha = 0.5,
         ),
@@ -52,25 +56,36 @@ end
 
 
 function theme_std()::Theme
-    return merge(theme_defaults(), Theme(
-        size = (1600, 900),
-        fontsize = 20,
-    ))
+    return merge(
+        Theme(
+            size = (1600, 900),
+            fontsize = 20,
+        ), 
+        theme_defaults()
+    )
 end
 
 
 function theme_talk()::Theme
-    return merge(theme_defaults(), Theme(
-        size = (1600, 900),
-        fontsize = 32,
-    ))
+    return merge(
+        Theme(
+            size = (1600, 900),
+            fontsize = 32,
+            Lines = (linewidth=3,)
+        ),
+        theme_defaults()
+    )
 end
 
 
 function theme_article()::Theme
-    return merge(theme_defaults(), Theme(
-        size = (1000, 600),
-        fontsize = 25,
-        figure_padding = 30
-    ))
+    return merge(
+        Theme(
+            size = (1000, 600),
+            fontsize = 25,
+            figure_padding = 30,
+            Lines = (linewidth=2,)
+        ),
+        theme_defaults()
+    )
 end
